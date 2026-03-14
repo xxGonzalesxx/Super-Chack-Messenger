@@ -1,5 +1,6 @@
 package com.superchack.validation;
 
+import javax.xml.validation.Validator;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
