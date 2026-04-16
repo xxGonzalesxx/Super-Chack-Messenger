@@ -1,6 +1,5 @@
 package com.superchack.validation;
 
-import javax.xml.validation.Validator;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -13,7 +12,7 @@ public class IPValidator {
 
     public static String getPublicIP() {
         try {
-            // Создаем HTTP клиент с таймаутом
+            // Создаем HTTP клиент с тайм-аутом
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(5))
                     .build();
@@ -104,5 +103,4 @@ public class IPValidator {
 
         return info.toString();
     }
-
 }

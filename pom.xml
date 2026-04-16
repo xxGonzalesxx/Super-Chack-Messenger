@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.superchack</groupId>
-    <artifactId>Super-Chack-Messenger</artifactId>
+    <artifactId>0</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -15,26 +15,33 @@
     </properties>
 
     <dependencies>
-        <!-- UPnP для автоматического открытия портов на роутере -->
         <dependency>
             <groupId>org.bitlet</groupId>
             <artifactId>weupnp</artifactId>
             <version>0.1.4</version>
         </dependency>
 
-        <!-- JUnit для тестов -->
+        <!-- Core JavaFX Controls -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.9.2</version>
-            <scope>test</scope>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21.0.3</version>
+        </dependency>
+
+        <!-- Support for FXML -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21.0.3</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Maven Assembly Plugin (для сборки JAR с зависимостями) -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -54,6 +61,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- JavaFX Maven Plugin (для запуска GUI без VM options) -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.superchack.gui.LoginWindow</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

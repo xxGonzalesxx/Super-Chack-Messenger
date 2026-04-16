@@ -1,8 +1,10 @@
 package com.superchack.network;
 
+import com.superchack.gui.ChatWindow;
+import javafx.application.Platform;
+
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
 
 public class P2PServer {
 
@@ -12,36 +14,38 @@ public class P2PServer {
     private PrintWriter out;
     private int port;
     private volatile boolean running = true;
-    private Scanner scanner;
+    private final ChatWindow chatWindow;
 
-    public void start(int port, Scanner scanner) {
+    public P2PServer(ChatWindow chatWindow) {
+        this.chatWindow = chatWindow;
+    }
+
+    public void start(int port) {
         this.port = port;
-        this.scanner = scanner;
 
         try {
-            System.out.println("\n🔓 Открываем порт " + port + " на роутере...");
+            System.out.println("\nОткрываем порт " + port + " на роутере...");
             boolean portOpened = UPnPManager.openPort(port, "Super Chack Messenger");
 
             if (!portOpened) {
-                System.out.println("⚠️ Не удалось открыть порт автоматически");
-                System.out.println("💡 Возможно, нужно открыть порт вручную в настройках роутера");
+                System.out.println("Не удалось открыть порт автоматически");
+                System.out.println("Возможно, нужно открыть порт вручную в настройках роутера");
             }
 
             serverSocket = new ServerSocket(port);
-            System.out.println("📡 Ожидание подключения на порту " + port + "...");
+            System.out.println("Ожидание подключения на порту " + port + "...");
 
             clientSocket = serverSocket.accept();
-            System.out.println("✅ Друг подключился!");
-            System.out.println("   IP друга: " + clientSocket.getInetAddress().getHostAddress());
+            System.out.println("Друг подключился!");
+            System.out.println("IP друга: " + clientSocket.getInetAddress().getHostAddress());
 
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
 
             startReceiving();
-            startSending();
 
         } catch (IOException e) {
-            System.err.println("❌ Ошибка сервера: " + e.getMessage());
+            System.err.println("Ошибка сервера: " + e.getMessage());
         }
     }
 
@@ -50,38 +54,25 @@ public class P2PServer {
             try {
                 String message;
                 while (running && (message = in.readLine()) != null) {
-                    System.out.println("\n👤 Друг: " + message);
-                    System.out.print("💬 Вы: ");
+                    String msg = message;  // ← копия для лямбды
+                    System.out.println("\nДруг: " + msg);
+                    if (chatWindow != null) {
+                        Platform.runLater(() -> chatWindow.addMessage(msg));
+                    }
                 }
             } catch (IOException e) {
                 if (running) {
-                    System.out.println("\n❌ Соединение с другом потеряно");
+                    System.out.println("\nСоединение с другом потеряно");
                 }
             }
         }).start();
     }
 
-    private void startSending() {
-        new Thread(() -> {
-            try {
-                System.out.println("💬 Введи сообщение (или /exit для выхода):");
-
-                while (running) {
-                    String message = scanner.nextLine();
-                    if (message.equalsIgnoreCase("/exit")) {
-                        running = false;
-                        break;
-                    }
-                    if (!message.isEmpty()) {
-                        out.println(message);
-                        System.out.println("📤 Отправлено: " + message);
-                    }
-                }
-                close();
-            } catch (Exception e) {
-                System.err.println("Ошибка ввода: " + e.getMessage());
-            }
-        }).start();
+    public void sendMessage(String message) {
+        if (out != null && !message.isEmpty()) {
+            out.println(message);
+            System.out.println("Отправлено: " + message);
+        }
     }
 
     public void close() {
@@ -92,7 +83,7 @@ public class P2PServer {
             if (clientSocket != null) clientSocket.close();
             if (serverSocket != null) serverSocket.close();
             UPnPManager.closePort(port);
-            System.out.println("🔌 Соединение закрыто");
+            System.out.println("Соединение закрыто");
         } catch (IOException e) {
             e.printStackTrace();
         }

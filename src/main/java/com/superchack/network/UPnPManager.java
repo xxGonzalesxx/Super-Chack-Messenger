@@ -17,12 +17,12 @@ public class UPnPManager {
             gateway = discover.getValidGateway();
 
             if (gateway != null) {
-                System.out.println("✅ UPnP шлюз найден: " + gateway.getFriendlyName());
+                System.out.println("UPnP шлюз найден: " + gateway.getFriendlyName());
             } else {
-                System.out.println("⚠️ UPnP не поддерживается роутером");
+                System.out.println("UPnP не поддерживается роутером");
             }
         } catch (Exception e) {
-            System.out.println("⚠️ Ошибка при поиске UPnP: " + e.getMessage());
+            System.out.println("Ошибка при поиске UPnP: " + e.getMessage());
         }
     }
 
@@ -34,14 +34,14 @@ public class UPnPManager {
             boolean success = gateway.addPortMapping(port, port, localIP, "TCP", description);
 
             if (success) {
-                System.out.println("✅ Порт " + port + " открыт на роутере (UPnP)");
-                System.out.println("   → " + localIP + ":" + port);
+                System.out.println("Порт " + port + " открыт на роутере (UPnP)");
+                System.out.println("→ " + localIP + ":" + port);
             } else {
-                System.out.println("⚠️ Не удалось открыть порт " + port + " через UPnP");
+                System.out.println("Не удалось открыть порт " + port + " через UPnP");
             }
             return success;
         } catch (Exception e) {
-            System.out.println("❌ Ошибка UPnP: " + e.getMessage());
+            System.out.println("Ошибка UPnP: " + e.getMessage());
             return false;
         }
     }
@@ -50,7 +50,7 @@ public class UPnPManager {
         if (gateway == null) return false;
         try {
             gateway.deletePortMapping(port, "TCP");
-            System.out.println("🔒 Порт " + port + " закрыт на роутере");
+            System.out.println("Порт " + port + " закрыт на роутере");
             return true;
         } catch (Exception e) {
             return false;
@@ -69,11 +69,11 @@ public class UPnPManager {
 
     public static void showGatewayInfo() {
         if (gateway != null) {
-            System.out.println("\n📡 Информация о роутере:");
+            System.out.println("\nИнформация о роутере:");
             System.out.println("   Модель: " + gateway.getFriendlyName());
             System.out.println("   IP: " + gateway.getLocalAddress().getHostAddress());
         } else {
-            System.out.println("⚠️ UPnP не доступен");
+            System.out.println("UPnP не доступен");
         }
     }
 }
