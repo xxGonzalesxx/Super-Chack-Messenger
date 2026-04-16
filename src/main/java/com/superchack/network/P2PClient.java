@@ -6,46 +6,38 @@ import java.util.Scanner;
 
 public class P2PClient {
 
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
     private volatile boolean running = true;
+    private PrintWriter out;
     private Scanner scanner;
 
     public void connect(String friendIP, int friendPort, Scanner scanner) {
         this.scanner = scanner;
-
         try {
-            System.out.println("\n🔌 Подключение к " + friendIP + ":" + friendPort + "...");
+            System.out.println("\nПодключение к " + friendIP + ":" + friendPort + "...");
+            Socket socket = new Socket(friendIP, friendPort);
+            System.out.println("Подключено! IP друга: " + socket.getInetAddress().getHostAddress());
 
-            socket = new Socket(friendIP, friendPort);
-            System.out.println("✅ Подключено к другу!");
-            System.out.println("   IP друга: " + socket.getInetAddress().getHostAddress());
-
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            startReceiving();
+            startReceiving(in);
             startSending();
 
         } catch (IOException e) {
-            System.err.println("❌ Ошибка подключения: " + e.getMessage());
-            System.out.println("💡 Проверь адрес и порт друга, а также настройки роутера");
+            System.err.println("Ошибка подключения: " + e.getMessage());
         }
     }
 
-    private void startReceiving() {
+    private void startReceiving(BufferedReader in) {
         new Thread(() -> {
             try {
                 String message;
                 while (running && (message = in.readLine()) != null) {
-                    System.out.println("\n👤 Друг: " + message);
-                    System.out.print("💬 Вы: ");
+                    System.out.println("\nДруг: " + message);
+                    System.out.print("Вы: ");
                 }
             } catch (IOException e) {
-                if (running) {
-                    System.out.println("\n❌ Соединение с другом потеряно");
-                }
+                if (running) System.out.println("\nСоединение потеряно");
             }
         }).start();
     }
@@ -53,18 +45,11 @@ public class P2PClient {
     private void startSending() {
         new Thread(() -> {
             try {
-                System.out.println("💬 Введи сообщение (или /exit для выхода):");
-
+                System.out.println("Введи сообщение (/exit для выхода):");
                 while (running) {
                     String message = scanner.nextLine();
-                    if (message.equalsIgnoreCase("/exit")) {
-                        running = false;
-                        break;
-                    }
-                    if (!message.isEmpty()) {
-                        out.println(message);
-                        System.out.println("📤 Отправлено: " + message);
-                    }
+                    if (message.equalsIgnoreCase("/exit")) break;
+                    if (!message.isEmpty()) out.println(message);
                 }
                 close();
             } catch (Exception e) {
@@ -75,13 +60,7 @@ public class P2PClient {
 
     public void close() {
         running = false;
-        try {
-            if (out != null) out.close();
-            if (in != null) in.close();
-            if (socket != null) socket.close();
-            System.out.println("🔌 Соединение закрыто");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        if (out != null) out.close();
+        System.out.println("Соединение закрыто");
     }
 }

@@ -1,6 +1,5 @@
 package com.superchack.validation;
 
-import javax.xml.validation.Validator;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -11,98 +10,67 @@ import java.time.Duration;
 
 public class IPValidator {
 
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+
+    private static final String PUBLIC_IP_URL = "https://api.ipify.org";
+
     public static String getPublicIP() {
         try {
-            // Создаем HTTP клиент с таймаутом
-            HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
-                    .build();
-
-            // Создаем запрос на HTTPS (безопасно!)
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.ipify.org"))
+                    .uri(URI.create(PUBLIC_IP_URL))
                     .timeout(Duration.ofSeconds(5))
                     .build();
-
-            // Отправляем запрос и получаем ответ
-            HttpResponse<String> response = client.send(request,
+            HttpResponse<String> response = HTTP_CLIENT.send(request,
                     HttpResponse.BodyHandlers.ofString());
-
             return response.body();
-
         } catch (Exception e) {
-            return "Ошибка получения внешнего IP.Возможно провайдер блокирует доступ";
+            return "Ошибка получения внешнего IP";
         }
     }
 
     public static String getLocalIP() {
         try {
-            InetAddress localhost = InetAddress.getLocalHost();
-            return localhost.getHostAddress();
+            return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
             return "127.0.0.1";
         }
     }
 
     public static boolean isValidIP(String ip) {
-        if (ip == null || ip.isEmpty()) {
-            return false;
-        }
+        if (ip == null || ip.isEmpty()) return false;
 
-        // Разбиваем по точкам
         String[] parts = ip.split("\\.");
+        if (parts.length != 4) return false;
 
-        // Должно быть 4 части
-        if (parts.length != 4) {
-            return false;
-        }
         try {
             for (String part : parts) {
                 int num = Integer.parseInt(part);
-                // Каждая часть от 0 до 255
-                if (num < 0 || num > 255) {
-                    return false;
-                }
+                if (num < 0 || num > 255) return false;
             }
         } catch (NumberFormatException e) {
-            return false; // если не число
+            return false;
         }
         return true;
     }
 
     public static boolean isLocalIP(String ip) {
-        return ip.startsWith("192.168.") ||
-                ip.startsWith("10.") ||
-                ip.startsWith("172.16.");
+        return ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.16.");
     }
 
     public static boolean isSameNetwork(String friendIP) {
         if (!isValidIP(friendIP)) return false;
-
         String myLocalIP = getLocalIP();
         if (!isValidIP(myLocalIP)) return false;
 
         String myNetwork = myLocalIP.substring(0, myLocalIP.lastIndexOf("."));
         String friendNetwork = friendIP.substring(0, friendIP.lastIndexOf("."));
-
         return myNetwork.equals(friendNetwork);
     }
 
     public static String getNetworkInfo() {
-        StringBuilder info = new StringBuilder();
-
-        String publicIP = getPublicIP();
-        String localIP = getLocalIP();
-
-        info.append("Определение ip...\n");
-        info.append("Внешний IP: ").append(publicIP).append("\n");
-        info.append("Локальный IP: ").append(localIP);
-
-        if (isLocalIP(localIP)) {
-            info.append(" (локальная сеть)");
-        }
-
-        return info.toString();
+        return "Внешний IP: " + getPublicIP() + "\nЛокальный IP: " + getLocalIP() +
+                (isLocalIP(getLocalIP()) ? " (локальная сеть)" : "");
     }
-
 }
